@@ -11,12 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Check project files
-        run: |
-          ls -la
-          find . -maxdepth 4 -type f
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -24,11 +20,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Check Files
+        run: |
+          ls -la
+          ls -la app/src/main/java/com/junayed/touchpadpro
 
       - name: Build APK
-        run: gradle assembleDebug --stacktrace --info
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload APK
         if: success()
