@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Touchpad Pro</string>
+    <string name="accessibility_description">Controls an on-screen touchpad and sends user-requested taps, swipes and scroll gestures.</string>
+</resources>
