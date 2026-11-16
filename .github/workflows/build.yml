@@ -12,11 +12,11 @@ permissions:
 
 jobs:
   build:
-    name: Build Android APK
+    name: Build MouseCorsul APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v5
 
       - name: Setup Java 17
@@ -44,11 +44,53 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build APK
+      - name: Check Project Files
         run: |
-          gradle :app:assembleDebug --no-daemon --stacktrace
+          echo "Project structure:"
+          ls -la
+          echo "Android files:"
+          find app -maxdepth 5 -type f -print
+          test -f settings.gradle || test -f settings.gradle.kts
+          test -f build.gradle || test -f build.gradle.kts
+          test -f app/build.gradle || test -f app/build.gradle.kts
+          test -f app/src/main/AndroidManifest.xml
+
+      - name: Build Debug APK
+        id: build_apk
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          gradle :app:assembleDebug \
+            --no-daemon \
+            --stacktrace \
+            --info 2>&1 | tee build-log.txt
+
+      - name: Show Build Error
+        if: always()
+        run: |
+          if [ -f build-log.txt ]; then
+            echo "========== BUILD ERROR =========="
+            grep -n -i -A 8 -B 8 -E \
+              "What went wrong|Caused by:|Execution failed|error:" \
+              build-log.txt | tail -100 || true
+            echo "========== LAST 100 LINES =========="
+            tail -100 build-log.txt
+          fi
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MouseCorsul-Build-Log
+          path: build-log.txt
+          if-no-files-found: ignore
+
+      - name: Check Build Result
+        if: always() && steps.build_apk.outcome == 'failure'
+        run: exit 1
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: MouseCorsul-APK
