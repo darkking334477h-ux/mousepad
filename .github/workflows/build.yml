@@ -1,41 +1,71 @@
 
-name: Build Touchpad Pro APK
+name: Build MouseCorsul APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - '**.java'
+      - '**.xml'
+      - '**.gradle'
+      - 'gradle.properties'
+      - 'settings.gradle'
+      - '.github/workflows/main.yml'
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Check Files
+      - name: Install Android SDK
         run: |
-          ls -la
-          ls -la app/src/main/java/com/junayed/touchpadpro
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build APK
-        run: gradle assembleDebug --stacktrace
+      - name: Check Android Project
+        run: |
+          echo "Checking project files..."
+          test -f settings.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
+          echo "Android project structure OK"
+
+      - name: Grant Execute Permission
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          fi
+
+      - name: Build Debug APK
+        run: |
+          if [ -f gradlew ]; then
+            ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          else
+            gradle :app:assembleDebug --no-daemon --stacktrace
+          fi
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Touchpad-Pro-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: MouseCorsul-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
