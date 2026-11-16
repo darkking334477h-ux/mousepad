@@ -1,16 +1,35 @@
-        - name: Locate Android Project
-          run: |
-            echo "Current directory:"
-            pwd
 
-            echo "Repository files:"
-            ls -la
+name: Build MouseCorsul APK
 
-            echo "Gradle files:"
-            find . -maxdepth 6 -type f \( \
-              -name "settings.gradle" -o \
-              -name "settings.gradle.kts" -o \
-              -name "build.gradle" -o \
-              -name "build.gradle.kts" -o \
-              -name "gradlew" \
-            \) -print
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Locate Android Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Locate Android Project
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Repository files:"
+          ls -la
+          echo "Gradle files:"
+          find . -maxdepth 6 -type f \( \
+            -name "settings.gradle" -o \
+            -name "settings.gradle.kts" -o \
+            -name "build.gradle" -o \
+            -name "build.gradle.kts" -o \
+            -name "gradlew" \
+          \) -print
